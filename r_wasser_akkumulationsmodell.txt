@@ -1,0 +1,48 @@
+#Berechnung des Topographic Classification Index (TCI) basierend auf dem interpolierten
+#Höhenmodell
+
+library(raster)
+library(sf)
+
+#Import des errechneten Höhenmodells
+ngof <- raster("./derived/RASTER/NGOF_CS1.tif")
+use_sp()
+
+#installieren des Package " rgrass7", falls dieses noch nicht vorhanden ist
+#BIVAND 2021, https://CRAN.R-project.org/package=rgrass7
+#install.packages("rgrass7")
+library(rgrass7)
+
+#Initialisieren von GRASS-GIS
+loc <- initGRASS("C:/Program Files/GRASS GIS 7.8", home = tempdir(), mapset = "PERMANENT", override = TRUE)
+
+#Erstellen eines Projektes in GRASS-GIS
+execGRASS(cmd ="g.proj",
+          flags = c("c","quiet"),
+          parameters = list(proj4 = as.character(crs(ngo))))
+
+#Importieren des Rasters in die Arbeitsoberfläche von GRASS-GIS
+writeRAST(x= as(ngof, "SpatialGridDataFrame"),
+          vname = "dem",
+          flags = c("overwrite","quiet"))
+
+#Setzt die Grenzen der geographischen Region
+execGRASS("g.region",
+          parameters = list(raster="dem"),
+          flags = "quiet")
+
+execGRASS(cmd = "g.region",
+           flags= c("p"))
+
+#Berechnung hydrologischer Parameter, hier in diesem Beispiel wird der Topographic 
+#Classification Index berechnet
+execGRASS(cmd = "r.watershed",
+          flags = c("b","quiet","overwrite"),
+          parameters = list(elevation ="dem",
+                            threshold = 500000,
+                            tci = "tci1"))          
+#Import des SpatialGridDataFrames in die Arbeitsoberfläche von R
+tci <- readRAST(vname = "tci1")
+#Konvertierung des SpatialGridDataFrames in ein Raster
+tci<- raster::raster(tci, layer=1,values=TRUE)
+#Export des Rasters als .tif Format

@@ -1,0 +1,288 @@
+#Zunächst wird der bearbeitete Datensatz mit den Bohrungen in den R Workspace geladen, 
+#um diesen auf seine Werte zu prüfen, um einen exemplarischen Datensatz auszuwählen, 
+#anhand dessen die Validierung des Interpolationsverfahren durchgeführt werden kann
+
+#In dem folgenden Abschnitt werden die XYZ Koordinaten der exemplarischen Bohrraster 
+#.csv Datei in die R Arbeitsoberfläche importiert und zu einem DataFrame konvertiert,
+#Des Weiteren werden die Bezeichnungen der Spalten für das Nutzen der Funktionen ent
+#sprechend angepasst.
+
+ExBP <- read.csv("./raw_data/ExBohrrasterXYZ.csv", header=TRUE, sep=";",dec=".")
+
+colnames(ExBP) <- c("ID","zcoord","xcoord","ycoord")
+
+write.table(ExBP, file = "ExBP.txt", sep = " ", dec=".", col.names = TRUE, row.names = FALSE)
+
+#Um aus dem DataFrame ein räumliches Objekt ("spatial object") erstellen zu können, müs
+#sen zunächst mit der Funktion coordinates() die Spalten festgelegt werden, aus denen die 
+#räumlichen Koordinaten genommen werden
+
+ExBP_spdf <- ExBP
+
+coordinates(ExBP_spdf) <- ~xcoord+ycoord
+
+ExBP_spdf
+
+#Nach der Erstellung lässt sich mit der Funktion proj4string() die Projektion eines räumlichen 
+#Datensatzes konfigurieren.
+
+proj4string(ExBP_spdf) <- "+init=EPSG:25833 +proj=utm +zone=33 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
+
+#In einem nächsten Schritt wird das digitale Geländemodell (DGM) für das exemplarische 
+#Untersuchungsgebiet in die R Arbeitsoberfläche importiert. In einem nächsten Schritt
+#wird ebenfalls die Projektion konfiguriert.
+
+ExDEM <- raster("./raw_data/ExDEM.tif")
+
+#"+init=EPSG:25833 +proj=utm +zone=33 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
+
+proj4string(ExDEM) <- "+init=EPSG:25833 +proj=utm +zone=33 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
+
+
+
+
+
+#Für die Analyse der Interpolationsverfahren ist es notwendig, dass das DGM auf die 
+#räumlichen Ausmaße des Bohrrasters zurechtgeschnitten wird.
+
+ExDEM_crop <- crop(ExDEM, ExBP_spdf)
+
+proj4string(ExDEM_crop) <- "+init=EPSG:25833 +proj=utm +zone=33 +datum=WGS84 +ellps=WGS84 +units=m +no_defs"
+
+#Über die Verwendung von plot.model() wird das DGM visualisiert
+plot.model("Digital Elevation Model",ExDEM_crop,ExBP,vis = TRUE)
+
+## Interpolation
+
+#Distanzgewichtete Interpolationsverfahren
+
+#Inverse Distance Weighted (idp = 2)
+idw2 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Inverse Distance Weighted (idp = 2)", idw2,ExBP,vis =TRUE)
+writeRaster(idw2,"Inverse Distance Weighted (idp = 2)",format="GTiff")
+
+#Inverse Distance Weighted (idp = 3)
+idw3 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Inverse Distance Weighted (idp = 3)", idw3,ExBP,vis =TRUE)
+writeRaster(idw3,"Inverse Distance Weighted (idp = 3)",format="GTiff")
+
+#Inverse Distance Weighted (idp = 4)
+idw4 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Inverse Distance Weighted (idp = 4)", idw4,ExBP,vis =TRUE)
+writeRaster(idw4,"Inverse Distance Weighted (idp = 4)",format="GTiff")
+
+#Nearest Neighbour (nmax = 4)
+nn4 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Nearest Neighbour (nmax = 4)", nn4,ExBP,vis =TRUE)
+writeRaster(nn4,"Nearest Neighbour (nmax = 4)",format="GTiff")
+
+#Nearest Neighbour (nmax = 5)
+nn5 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Nearest Neighbour (nmax = 5)", nn5,ExBP,vis =TRUE)
+writeRaster(nn5,"Nearest Neighbour (nmax = 5)",format="GTiff")
+
+#Nearest Neighbour (nmax = 6)
+nn6 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Nearest Neighbour (nmax = 6)", nn6,ExBP,vis =TRUE)
+writeRaster(nn6,"Nearest Neighbour (nmax = 6)",format="GTiff")
+
+#Inverse Distance Weighted (idp = 2, nmax = 5)
+idw2_nn5 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Inverse Distance Weighted (nmax = 5, idp = 2)", idw2_nn5,ExBP,vis =TRUE)
+writeRaster(idw2_nn5,"Inverse Distance Weighted (nmax = 5, idp = 2)",format="GTiff")
+
+
+#Inverse Distance Weighted (idp = 3, nmax = 5)
+idw3_nn5 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Inverse Distance Weighted (nmax = 5, idp = 3)", idw3_nn5,ExBP,vis =TRUE)
+writeRaster(idw3_nn5,"Inverse Distance Weighted (nmax = 5, idp = 3)",format="GTiff")
+
+#Inverse Distance Weighted (idp = 4, nmax = 5)
+idw4_nn5 <- interp.idw.nn(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Inverse Distance Weighted (nmax = 5, idp = 4)", idw4_nn5,ExBP,vis =TRUE)
+writeRaster(idw4_nn5,"Inverse Distance Weighted (nmax = 5, idp = 4)",format="GTiff")
+
+
+#Geostatistische Verfahren
+
+#Darstellung der theoretischen Variogrammfunktionen
+show.vgms()
+
+#Erstellung von Variogrammwolke, Empirischem Variogramm und vier an das Empirische 
+#Variogramm angepasste, theoretische Variogrammfunktionen
+vario(ExBP_spdf, ExBP_spdf@data$zcoord)
+
+#Simpel Kriging (vgm = Bes)
+sikribes <- interp.sikri(ExBP_spdf, ExBP_spdf@data$zcoord, ExDEM_crop,vgm = "Bes")
+
+#Simpel Kriging (vgm = Sph)
+sikrisph <- interp.sikri(ExBP_spdf, ExBP_spdf@data$zcoord, ExDEM_crop,vgm = "Sph")
+
+#Ordinary Kriging (vgm = Bes)
+orkribes <- interp.orkri(ExBP_spdf, ExBP_spdf@data$zcoord, ExDEM_crop,vgm = "Bes")
+
+#Ordinary Kriging (vgm = Sph)
+orkrisph <- interp.orkri(ExBP_spdf, ExBP_spdf@data$zcoord, ExDEM_crop,vgm = "Sph")
+
+#Spline Interpolation
+
+#Thin Plated Spline
+tps <- interp.tps(ExBP_spdf, ExBP_spdf@data$zcoord,ExDEM_crop)
+plot.model("Thin Plated Spline", tps,ExBP,vis =TRUE)
+writeRaster(tps,"Thin Plated Spline",format="GTiff")
+
+#Import des Rasters interpoliert nach Thin Plated Spline (TIN)
+tps_tin <- raster("./raw_data/TPS_TIN.tif")
+tps_tin <- crop(tps_tin, ExBP_spdf)
+plot.model("Thin Plated Spline (TIN)", tps_tin,ExBP,vis =TRUE)
+
+
+
+
+
+
+
+
+##Validierung
+
+#Berechnung der Stichprobenpunkte
+vpts <- valid.pts.mdl(ExDEM_crop)
+
+#Berechnung der Differenz
+IDW2_valid <- valid.diff(interpname = "IDW2", interprast = idw2, valid.pts = vpts, rast = ExDEM_crop)
+IDW3_valid <- valid.diff(interpname = "IDW3", interprast = idw3, valid.pts = vpts, rast = ExDEM_crop)
+IDW4_valid <- valid.diff(interpname = "IDW4", interprast = idw4, valid.pts = vpts, rast = ExDEM_crop)
+NNI4_valid <- valid.diff(interpname = "NNI4", interprast = nn4, valid.pts = vpts, rast = ExDEM_crop)
+NNI5_valid <- valid.diff(interpname = "NNI5", interprast = nn5, valid.pts = vpts, rast = ExDEM_crop)
+NNI6_valid <- valid.diff(interpname = "NNI6", interprast = nn6, valid.pts = vpts, rast = ExDEM_crop)
+IDW2_NN5_valid <- valid.diff(interpname = "IDW2_NN5", interprast = idw2_nn5, valid.pts = vpts, rast = ExDEM_crop)
+IDW3_NN5_valid <- valid.diff(interpname = "IDW3_NN5", interprast = idw3_nn5, valid.pts = vpts, rast = ExDEM_crop)
+IDW4_NN5_valid <- valid.diff(interpname = "IDW4_NN5", interprast = idw4_nn5, valid.pts = vpts, rast = ExDEM_crop)
+SIKRIBES_valid <- valid.diff(interpname = "SIKRIBES", interprast = sikribes, valid.pts = vpts, rast = ExDEM_crop)
+SIKRISPH_valid <- valid.diff(interpname = "SIKRISPH", interprast = sikrisph, valid.pts = vpts, rast = ExDEM_crop)
+ORKRIBES_valid <- valid.diff(interpname = "ORKRIBES", interprast = orkribes, valid.pts = vpts, rast = ExDEM_crop)
+ORKRISPH_valid <- valid.diff(interpname = "ORKRISPH", interprast = orkrisph, valid.pts = vpts, rast = ExDEM_crop)
+TPS_valid <- valid.diff(interpname = "TPS", interprast = tps, valid.pts = vpts, rast = ExDEM_crop)
+TPSTIN_valid <- valid.diff(interpname = "TPSTIN",interprast = tps_tin, valid.pts = vpts, rast = ExDEM_crop)
+
+#Berechnung der Präzision
+prec_IDW2 <- valid.prec(IDW2_valid$IDW2, tolmin = -0.2, tolmax = 0.2)
+prec_IDW3 <- valid.prec(IDW3_valid$IDW3, tolmin = -0.2, tolmax = 0.2)
+prec_IDW4 <- valid.prec(IDW4_valid$IDW4, tolmin = -0.2, tolmax = 0.2)
+prec_NNI4 <- valid.prec(NNI4_valid$NNI4, tolmin = -0.2, tolmax = 0.2)
+prec_NNI5 <- valid.prec(NNI5_valid$NNI5, tolmin = -0.2, tolmax = 0.2)
+prec_NNI6 <- valid.prec(NNI6_valid$NNI6, tolmin = -0.2, tolmax = 0.2)
+prec_IDW2NN5 <- valid.prec(IDW2_NN5_valid$IDW2_NN5, tolmin = -0.2, tolmax = 0.2)
+prec_IDW3NN5 <- valid.prec(IDW3_NN5_valid$IDW3_NN5, tolmin = -0.2, tolmax = 0.2)
+prec_IDW4NN5 <- valid.prec(IDW4_NN5_valid$IDW4_NN5, tolmin = -0.2, tolmax = 0.2)
+prec_SIKRIBES <- valid.prec(SIKRIBES_valid$SIKRIBES, tolmin = -0.2, tolmax = 0.2)
+prec_SIKRISPH <- valid.prec(SIKRISPH_valid$SIKRISPH, tolmin = -0.2, tolmax = 0.2)
+prec_ORKRIBES <- valid.prec(ORKRIBES_valid$ORKRIBES, tolmin = -0.2, tolmax = 0.2)
+prec_ORKRISPH <- valid.prec(ORKRISPH_valid$ORKRISPH, tolmin = -0.2, tolmax = 0.2)
+prec_TPS <- valid.prec(TPS_valid$TPS, tolmin = -0.2, tolmax = 0.2)
+prec_TPSTIN <- valid.prec(TPSTIN_valid$TPSTIN, tolmin = -0.2, tolmax = 0.2)
+
+
+#Berechnung des Abweichungsmodells
+IDW2_valmodel <- valid.model(pts= ExBP, interpname = "Inverse Distance Weighted (idp = 2)",diff_interp_rast = IDW2_valid, valid_value = IDW2_valid$IDW2, rast = ExDEM_crop)
+IDW3_valmodel <- valid.model(pts= ExBP, interpname = "Inverse Distance Weighted (idp = 3)",diff_interp_rast = IDW3_valid, valid_value = IDW3_valid$IDW3, rast = ExDEM_crop)
+IDW4_valmodel <- valid.model(pts= ExBP, interpname = "Inverse Distance Weighted (idp = 4)",diff_interp_rast = IDW4_valid, valid_value = IDW4_valid$IDW4, rast = ExDEM_crop)
+NNI4_valmodel <- valid.model(pts= ExBP, interpname = "Nearest Neighbour (nmax = 4)",diff_interp_rast = NNI4_valid,valid_value = NNI4_valid$NNI4, rast = ExDEM_crop)
+NNI5_valmodel <- valid.model(pts= ExBP, interpname = "Nearest Neighbour (nmax = 5)",diff_interp_rast = NNI5_valid,valid_value = NNI5_valid$NNI5, rast = ExDEM_crop)
+NNI6_valmodel <- valid.model(pts= ExBP, interpname = "Nearest Neighbour (nmax = 6)",diff_interp_rast = NNI6_valid,valid_value = NNI6_valid$NNI6, rast = ExDEM_crop)
+IDW2_NN5_valmodel <- valid.model(pts= ExBP, interpname = "Inverse Distance Weighted (idp = 2, nmax = 5)",diff_interp_rast = IDW2_NN5_valid,valid_value = IDW2_NN5_valid$IDW2_NN5, rast = ExDEM_crop)
+IDW3_NN5_valmodel <- valid.model(pts= ExBP, interpname = "Inverse Distance Weighted (idp = 3, nmax = 5)",diff_interp_rast = IDW3_NN5_valid,valid_value = IDW3_NN5_valid$IDW3_NN5, rast = ExDEM_crop)
+IDW4_NN5_valmodel <- valid.model(pts= ExBP, interpname = "Inverse Distance Weighted (idp = 4, nmax = 5",diff_interp_rast = IDW4_NN5_valid,valid_value = IDW4_valid$IDW4, rast = ExDEM_crop)
+SIKRIBES_valmodel <- valid.model(pts= ExBP, interpname = "Simple Kriging (vgm = Bes)",diff_interp_rast = SIKRIBES_valid,valid_value = SIKRIBES_valid$SIKRIBES, rast = ExDEM_crop)
+SIKRISPH_valmodel <- valid.model(pts= ExBP, interpname = "Simple Kriging (vgm = Sph)",diff_interp_rast = SIKRISPH_valid,valid_value = SIKRISPH_valid$SIKRISPH, rast = ExDEM_crop)
+ORKRIBES_valmodel <- valid.model(pts= ExBP, interpname = "Ordinary Kriging (vgm = Bes)",diff_interp_rast = ORKRIBES_valid,valid_value = ORKRIBES_valid$ORKRIBES, rast = ExDEM_crop)
+ORKRISPH_valmodel <- valid.model(pts= ExBP, interpname = "Ordinary Kriging (vgm = Sph)",diff_interp_rast = ORKRISPH_valid,valid_value = ORKRISPH_valid$ORKRISPH, rast = ExDEM_crop)
+TPS_valmodel <- valid.model(pts= ExBP, interpname = "Thin Plated Spline",diff_interp_rast = TPS_valid,valid_value = TPS_valid$TPS, rast = ExDEM_crop)
+TPSTIN_valmodel <- valid.model(pts= ExBP, interpname = "Thin Plated Spline (TIN)",diff_interp_rast = TPSTIN_valid,valid_value = TPSTIN_valid$TPSTIN, rast = ExDEM_crop)
+
+#Aufrunden der Dezimalstellen für den Boxplot
+IDW2_bxpl <- round_any(IDW2_valid$IDW2, .02)
+IDW3_bxpl <-  round_any(IDW3_valid$IDW3, .02)
+IDW4_bxpl <- round_any(IDW4_valid$IDW4, .02)
+NNI3_bxpl <- round_any(NNI3_valid$NNI3, .02)
+NNI4_bxpl <- round_any(NNI4_valid$NNI4, .02)
+NNI5_bxpl <- round_any(NNI5_valid$NNI5, .02)
+NNI6_bxpl <- round_any(NNI6_valid$NNI6, .02)
+NNI7_bxpl <- round_any(NNI7_valid$NNI7, .02)
+IDW2_NN5_bxpl <- round_any(IDW2_NN5_valid$IDW2_NN5, .02)
+IDW3_NN5_bxpl <- round_any(IDW3_NN5_valid$IDW3_NN5, .02)
+IDW4_NN5_bxpl <- round_any(IDW4_NN5_valid$IDW4_NN5, .02)
+SIKRIBES_bxpl <- round_any(SIKRIBES_valid$SIKRIBES, .02)
+SIKRISPH_bxpl <- round_any(SIKRISPH_valid$SIKRISPH, .02)
+SIKRIGAU_bxpl <- round_any(SIKRIGAU_valid$SIKRIGAU, .02)
+ORKRIBES_bxpl <- round_any(ORKRIBES_valid$ORKRIBES, .02)
+ORKRISPH_bxpl <- round_any(ORKRISPH_valid$ORKRISPH, .02)
+ORKRIGAU_bxpl <- round_any(ORKRIGAU_valid$ORKRIGAU, .02)
+TPS_bxpl <- round_any(TPS_valid$TPS, .02)
+TPSTIN_bxpl <- round_any(TPSTIN_valid$TPSTIN, .02)
+
+#Berechnung der Boxplots
+boxplot_1 <- cbind(IDW2_bxpl,
+IDW3_bxpl,
+IDW4_bxpl,
+NNI4_bxpl,
+NNI5_bxpl)
+
+boxpplot_2 <- cbind(NNI6_bxpl,
+               IDW2_NN5_bxpl,
+               IDW3_NN5_bxpl,
+               IDW4_NN5_bxpl,
+               SIKRISPH_bxpl)
+
+boxpplot_3 <- cbind(SIKRIBES_bxpl,
+                    ORKRISPH_bxpl,
+                    ORKRIBES_bxpl,
+                    TPS_bxpl,
+                    TPSTIN_bxpl)
+
+colnames(boxplot_1) <- c("IDW2","IDW3","IDW4","NNI4","NNI5")
+
+colnames(boxpplot_2) <- c("NNI6","IDW2NNI5","IDW3NNI5","IDW4NNI5","SIKRISPH")
+
+colnames(boxpplot_3) <- c("SIKRIBES","ORKKRISPH","ORKRIBES","TPS","TPSTIN")
+
+boxplot_1 <- reshape2::melt(boxplot_1,c("id","im"))
+
+boxplot_1 <- data_frame(difference = boxplot_1$value, im = boxplot_1$im)
+
+boxplot_gra_1 <- ggplot(boxplot_1, aes(x=difference, y=im))+
+  geom_jitter(shape=3, width = 0.1, height = 0.1)+
+  ggtitle("Deviation Boxplot 1")+
+  xlab("difference in m")+
+  ylab("interpolation method")+
+  geom_boxplot()+
+  coord_flip()+
+stat_summary(fun=mean, geom="point", shape=23, size=4)
+boxplot_gra_1
+boxplot_2 <- reshape2::melt(boxpplot_2,c("id","im"))
+
+boxplot_2 <- data_frame(difference = boxplot_2$value, im = boxplot_2$im)
+
+boxplot_gra_2 <- ggplot(boxplot_2, aes(x=difference, y=im))+
+  geom_jitter(shape=3, width = 0.1, height = 0.1)+
+  ggtitle("Deviation Boxplot 2")+
+  xlab("difference in m")+
+  ylab("interpolation method")+
+  geom_boxplot()+
+  coord_flip()+
+  stat_summary(fun=mean, geom="point", shape=23, size=4)
+boxplot_gra_2
+
+boxplot_3 <- reshape2::melt(boxpplot_3,c("id","im"))
+
+boxplot_3 <- data_frame(difference = boxplot_3$value, im = boxplot_3$im)
+
+boxplot_gra_3 <- ggplot(boxplot_3, aes(x=difference, y=im))+
+  geom_jitter(shape=3, width = 0.1, height = 0.1)+
+  ggtitle("Deviation Boxplot 3")+
+  xlab("difference in m")+
+  ylab("interpolation method")+
+  geom_boxplot()+
+  coord_flip()+
+  stat_summary(fun=mean, geom="point", shape=23, size=4)
+boxplot_gra_3

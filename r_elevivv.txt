@@ -1,0 +1,365 @@
+#Elevation Interpolation, Visualization and Validation
+#Installieren der fehlenden Bibliotheken
+
+list.of.packages <- c("ggplot2","gstat", "rayshader", "raster", "fields","reshape2","sp","tibble","tidyr","rgdal")
+
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+#Für eine manuelle Anwendung die folgenden Pakete, welche benötigt werden
+
+#installieren des Package "ggplot2", falls dieses noch nicht vorhanden ist
+#WICKHAM et al. 2020, https://CRAN.R-project.org/package=ggplot2
+#install.packages("ggplot2")
+library(ggplot2)
+
+#installieren des Package "gstat", falls dieses noch nicht vorhanden ist
+#PEBESMA/GRAELER 2020, https://CRAN.R-project.org/package=gstat
+#install.packages("gstat")
+library(gstat)
+
+#installieren des Package "rayshader", falls dieses noch nicht vorhanden ist
+#MORGAN-WALL 2020, https://CRAN.R-project.org/package=rayshader
+#install.packages("rayshader")
+library(rayshader)
+
+#installieren des Package "raster", falls dieses noch nicht vorhanden ist
+#HIJMANS 2020, https://CRAN.R-project.org/package=raster
+#install.packages("raster")
+library(raster)
+
+#installieren des Package "fields", falls dieses noch nicht vorhanden ist
+#NYCHKA 2020, https://CRAN.R-project.org/package=fields
+#install.packages("fields")
+library(fields)
+
+#installieren des Package "reshape2", falls dieses noch nicht vorhanden ist
+#WICKHAM 2020a, https://CRAN.R-project.org/package=reshape2
+#install.packages("reshape2")
+library(reshape2)
+
+#installieren des Package "sp", falls dieses noch nicht vorhanden ist
+#PEBESMA/BIVAND 2021, https://CRAN.R-project.org/package=sp 
+#install.packages("sp")
+library(sp)
+
+#installieren des Package "rgdal", falls dieses noch nicht vorhanden ist
+#BIVAND ET AL. 2021, https://CRAN.R-project.org/package=rgdal
+#installed.packages("rgdal")
+library(rgdal)
+#installieren des Package "tidyr", falls dieses noch nicht vorhanden ist
+#Wickham 2021, https://CRAN.R-project.org/package=tidyr
+#install.packages("tidyr")
+library(tidyr)
+
+#installieren des Package "rgdal", falls dieses noch nicht vorhanden ist
+#MÜLLER 2021, https://CRAN.R-project.org/package=tibble 
+#install.packages("tibble")
+library(tibble)
+
+#installieren des Package "rgdal", falls dieses noch nicht vorhanden ist
+#WICKHAM 2020b, https://cran.r-project.org/web/packages/plyr/index.html
+#install.packages("plyr")
+library(plyr)
+##Visualisierung
+#die Funktion plot.model() ist dazu geeignet, ein Raster eines Geländereliefs (digitales 
+#Geländemodell oder interpolierte Geländeoberfläche) zwei dimensional sowie 
+#perspektivisch darzustellen (ist vis = TRUE, so wird eine perspektivische Darstellung 
+#erstellt)
+
+plot.model <- function(title,rast,pts, vis = TRUE){
+  
+  if(vis == TRUE){
+    
+    rast_p <- rasterToPoints(rast)
+    rast_df <- data.frame(rast_p)
+    colnames(rast_df) <- c("xcoord", "ycoord", "zcoord")
+    
+    plot_rast<- ggplot(rast_df, aes(x=xcoord, y=ycoord))+
+      geom_raster(aes(fill = zcoord ))+
+      coord_equal()+
+      ggtitle(title)+
+      scale_fill_gradientn(na.value = "white",
+                           colours = hcl.colors(10,
+                                                palette = "Earth",
+                                                rev = TRUE))+
+      theme(axis.title.x = element_text(size=10),
+            axis.title.y = element_text(size=10, angle=90),
+            axis.text.x = element_text(size=8),
+            axis.text.y = element_text(size=8, angle=90, vjust=0, hjust=0.5),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            legend.position = "right",
+            legend.key = element_blank())+
+      geom_contour(aes(z=zcoord),colour = "grey",size = 0.2)+
+      geom_point(aes(x=xcoord, y=ycoord), data = pts, size = 0.1)
+
+    #Die Abbildung wird als .png Datei expoertiert
+    ggsave(paste(title, ".png", sep=""), plot = plot_rast)
+    
+
+    #Erstellen einer perspektivischen Ansicht
+
+    gg_rast <- ggplot(rast_df, aes(x=xcoord, y=ycoord))+
+      geom_raster(aes(fill = zcoord ),show.legend =FALSE,hjust = 0,
+                  vjust = 0)+
+      coord_equal()+
+      scale_y_continuous(position = "right") +
+      scale_fill_gradientn(na.value = "white",
+                           colours = hcl.colors(10,
+                                                palette = "Earth",
+                                                rev = TRUE))+
+      theme(axis.title.x = element_text(size=10),
+            axis.title.y = element_text(size=10, angle=90),
+            axis.text.x = element_text(size=8),
+            axis.text.y = element_text(size=8, angle=90, vjust=0, hjust=0.5),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank())
+    
+#Mit der Funktion plot_gg() lässt sich eine perspektivische Darstellung eines „ggplots“ 
+#erstellen und als .png Dateien exportieren
+
+    rayshader::plot_gg(gg_rast,
+                       multicore = TRUE,
+                       raytrace = TRUE,
+                       width = 3.5,
+                       height = 4,
+                       scale = 300,
+                       windowsize = c(1100, 800),
+                       zoom = 0.6,
+                       phi = 30,
+                       theta = 30,
+                       background="white")
+    render_snapshot(filename = paste(title, "_3D.png", sep=""), clear = TRUE)
+    }
+  else{
+    rast_p <- rasterToPoints(rast)
+    rast_df <- data.frame(rast_p)
+    colnames(rast_df) <- c("xcoord", "ycoord", "zcoord ")
+    plot_rast<- ggplot(rast_df, aes(x=xcoord, y=ycoord))+
+      geom_raster(aes(fill = zcoord ))+
+      coord_equal()+
+      ggtitle(title)+
+      scale_fill_gradientn(na.value = "white",
+                           colours = hcl.colors(10,
+                                                palette = "Earth",
+                                                rev = TRUE))+
+      theme(axis.title.x = element_text(size=10),
+            axis.title.y = element_text(size=10, angle=90),
+            axis.text.x = element_text(size=8),
+            axis.text.y = element_text(size=8, angle=90, vjust=0, hjust=0.5),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            legend.position = "right",
+            legend.key = element_blank())+
+      geom_contour(aes(z=zcoord),colour = "grey",size = 0.2)+
+      geom_point(aes(x=xcoord, y=ycoord), data = pts, size = 0.1)
+ #Die Abbildung wird als .png Datei expoertiert
+    ggsave(paste(title, ".png", sep=""), plot = plot_rast)   
+  }
+  return(plot_rast)}
+
+##Funktionen der räumlichen Interpolationsmethoden
+
+#Distanzgewichtete Interpolationsverfahren
+
+#mit der Funktion interp.idw.nn() ist es möglich nach zwei Verfahren zu interpolieren, Inverse
+#Distance Weighted und Nearest Neighbour Interpolation
+
+interp.idw.nn <- function(pts_spdf, attribut, rast){
+    
+#es wird eine Abfrage erstellt, in der der Benutzer den Wert der zu 
+#betrachtenden Nachbarn eintragen kann
+
+while(TRUE){
+        nmax = suppressWarnings(as.numeric(readline("amount of nearest 
+neighbour to include in interpolation: ")))
+    
+    if(!is.na(nmax)){
+      
+      break
+    }   
+  }
+  
+#es wird eine Abfrage erstellt, in der der Benutzer den Wert der zu 
+#der Inverse Distance Power eintragen kann
+  
+  while(TRUE){   
+    idp = suppressWarnings(as.numeric(readline("value for the inverse distance power: ")))
+    
+    if(!is.na(idp)){
+      
+      break
+    }   
+  }
+  
+#auf der Grundlage der durch den Benutzer gewählten Parameter wird nun die Interpolation 
+#durchgeführt und in eine Variable übertragen, welche das berechnete Raster enthält
+
+  idw_nn_model <- gstat(formula= attribut~1, data = pts_spdf, nmax=nmax , set=list(idp = idp))
+  interp_idw_nn <- interpolate(rast, idw_nn_model)
+   return(interp_idw_nn)}
+#Geostatistische Verfahren
+
+#mit der Funktion vario() lassen sich die Variogrammwolke, das Empirische Variogramm so
+#wie die Anpassung von vier ausgewählten theoretischen Variogrammfunktionen, welche
+#häufig für die Interpolation von Geländemodellen verwendet werden, berechnen. 
+
+vario <- function(pts_spdf,attribut){
+
+#Berechnung der Variogrammwolke  
+  vc <- variogram(attribut~1,pts_spdf, cloud = TRUE)
+
+#Berechnung des Empirischen Variogramms  
+  ev <- variogram(attribut~1,pts_spdf)
+  
+#Anpassung einer Bessel Funktion an den Verlauf des Empirischen Variogramms  
+  variofit_bes <- fit.variogram(
+    object = ev,
+    model = vgm(model = "Bes"),fit.sills = TRUE, fit.ranges = TRUE)
+  
+  bes <- plot(ev,variofit_bes,main="Bes")
+  
+#Anpassung einer Linear Funktion an den Verlauf des Empirischen Variogramms  
+  variofit_lin <- fit.variogram(
+    object = ev,
+    model = vgm(model = "Lin"),fit.sills = TRUE, fit.ranges = TRUE)
+  
+  lin <- plot(ev,variofit_lin,main="Lin")
+  
+#Anpassung einer Spcherical Funktion an den Verlauf des Empirischen Variogramms    
+  variofit_sph <- fit.variogram(
+    object = ev,
+    model = vgm(model = "Sph"),fit.sills = TRUE, fit.ranges = TRUE)
+  
+  sph <- plot(ev,variofit_sph,main="Sph")
+
+#Anpassung einer Gaussian Funktion an den Verlauf des Empirischen Variogramms      
+  variofit_gau <- fit.variogram(
+    object = ev,
+    model = vgm(model = "Gau"),fit.sills = TRUE, fit.ranges = TRUE)
+  
+  gau <- plot(ev,variofit_gau,main="Gau")  
+  
+  return(list(plot(vc),plot(ev),bes,lin,sph,gau))
+}
+
+
+
+
+
+
+
+#Simple Kriging Funktion
+interp.sikri <- function(pts_spdf,attribut,rast,vgm){
+  
+#Berechnung des Variogramms  
+  ev <- variogram(attribut~1,pts_spdf)  
+  variofit <- fit.variogram(
+    object = ev,
+    model = vgm(model = vgm),fit.sills = TRUE, fit.ranges = TRUE)
+
+#Konvertierung des Rasters in einen SpatialGridDataFrame  
+  rast_sgdf <- as(rast, 'SpatialGridDataFrame')
+
+#Berechnung des kriging means  
+  beta = mean(attribut,digits = 2)
+  beta <- round(beta, digit= 2)
+
+#Errechnung einen Höhenmodells basierend auf dem Variogramm und kriging mean  
+  interp_sikri <- krige(attribut~1, pts_spdf, rast_sgdf, variofit, beta = beta)    
+  interp_sikri <- raster(interp_sikri)    
+  return(interp_sikri)
+}
+
+#Ordinary Kriging Funktion
+interp.orkri <- function(pts_spdf,attribut,rast,vgm){
+
+#Berechnung des Variogramms    
+  ev <- variogram(attribut~1,pts_spdf)  
+  variofit <- fit.variogram(
+    object = ev,
+    model = vgm(model = vgm),fit.sills = TRUE, fit.ranges = TRUE)
+  
+#Konvertierung des Rasters in einen SpatialGridDataFrame    
+  rast_sgdf <- as(rast, 'SpatialGridDataFrame')
+  
+#Errechnung einen Höhenmodells basierend auf dem Variogramm  
+  interp_orkri <- krige(attribut~1, pts_spdf, rast_sgdf, variofit)    
+  interp_orkri <- raster(interp_orkri)    
+  return(interp_orkri)
+}
+
+#Spline Interpolation
+
+#Thin Plated Spline Funktion
+interp.tps <- function(pts_spdf,attribut ,rast){
+#Berechnung eines Höhenmodells basierend auf Thine Plated Splines  
+  tps_model <- Tps(coordinates(pts_spdf), attribut)
+  
+  interp_tps <- interpolate(rast, tps_model)
+  
+  return(interp_tps)
+}
+##Validierung
+
+#Generierung der Stichprobenpunkte
+valid.pts <- function(rast){  
+  rast_sgdf <- as(rast, 'SpatialGridDataFrame')  
+  sp <- data.frame(spsample(x = rast_sgdf, n =  10000, type = "stratified"))  
+  return(sp) }
+
+#Funktion für die Berechnung der Differenz 
+valid.diff <- function(interpname, interprast,rast, valid.pts){
+  gok_rast <- raster::extract(rast, valid.pts)
+  gok_interprast <- raster::extract(interprast, valid.pts)    
+  diff_gok_interprast_rast <- gok_interprast - gok_rast    
+  diff_interprast_rast <- cbind(valid.pts,diff_gok_interprast_rast)  
+  diff_interprast_rast <- diff_interprast_rast %>% drop_na()  
+  colnames(diff_interprast_rast) <- c("xcoord","ycoord",interpname)  
+  return(diff_interprast_rast) }
+
+#Funktion für die Berechnung der Präzision 
+valid.prec <- function(valid.value, tolmin, tolmax){
+    prec <- sum(valid.value > tolmin & valid.value < tolmax) }
+
+#Funktion für die Erstellung eines Abweichungsmodells
+valid.model <- function(pts, interpname,diff_interp_rast,valid_value,rast){  
+  coordinates(diff_interp_rast) <- ~xcoord+ycoord  
+  proj4string(diff_interp_rast) <- proj4string(rast)  
+  model_diff_nn <- gstat(formula= valid_value~1, data = diff_interp_rast, nmax=5, set=list(idp = 0))  
+  model_diff <- interpolate(rast, model_diff_nn)
+   model_diff_p <- rasterToPoints(model_diff)  
+  model_diff_p_df <- data.frame(model_diff_p)  
+  colnames(model_diff_p_df) <- c("xcoord", "ycoord", "deviation")   
+  #low="blue", mid="white", high="red"  
+  plot_diff <- ggplot(model_diff_p_df, aes(x=xcoord, y=ycoord))+
+    geom_raster(aes(fill = deviation))+
+    coord_equal()+
+    scale_fill_gradient2(midpoint = 0, low="blue", mid="white", high="red",
+          breaks = c(-1,-0.5,0,0.5,1), labels = format(c("-1","-0.5","0","0.5","1")), space = "Lab")+
+    labs(title = interpname,
+         subtitle = "deviation in m")+
+    theme(axis.title.x = element_text(size=10),
+          axis.title.y = element_text(size=10, angle=90),
+          axis.text.x = element_text(size=8),
+          axis.text.y = element_text(size=8, angle=90, vjust=0, hjust=0.5),
+          legend.position = "right",
+          legend.key = element_blank())+
+    geom_point(aes(x=xcoord, y=ycoord), data = pts, size = 0.1)
+  ggsave(paste(interpname, ".png", sep=""), plot = plot_diff)    
+  return(plot_diff) }
+
+
+#Berechnung eines Boxplots basierend auf der Differenz
+valid.boxplot <- function(valid.diff){   
+  boxplot <- reshape2::melt(valid.diff,c('id','Interpolationsverfahren'))  
+  boxplot <- data_frame(Differenz = boxplot$value, Interpolationsverfahren = boxplot$Interpolationsverfahren,) %>%
+    ggplot(., aes(x=Differenz,y=Interpolationsverfahren,fill=Differenz)) +
+    ggtitle("Abweichung der interpolierten Werte")+
+    xlab("Differenz in (m)")+
+    ylab("Interpolationsverfahren")+
+    geom_boxplot()+
+    coord_flip()  
+  return(boxplot)
+}
