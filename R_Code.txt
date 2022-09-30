@@ -1,5 +1,5 @@
-12.	R Code
-12.1.	Kartierung Magnetik
+#R Code Masterarbeit Rekonstruktion einer übermoorten, prähistorischen Landschaft bei Wanna, Ldkr. Cuxhaven
+#Kartierung Magnetik
 #Setzen des Pfades des Arbeitsverzeichnisses
 setwd("Z:/GIS")
 
@@ -719,7 +719,7 @@ valid.boxplot <- function(valid.diff){
 }
 
  
-12.3.	Validierung anhand eines exemplarischen Datensatzes 
+#	Validierung anhand eines exemplarischen Datensatzes 
 
 #Zunächst wird der bearbeitete Datensatz mit den Bohrungen in den R Workspace geladen, 
 #um diesen auf seine Werte zu prüfen, um einen exemplarischen Datensatz auszuwählen, 
