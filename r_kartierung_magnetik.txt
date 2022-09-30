@@ -1,0 +1,350 @@
+#Setzen des Pfades des Arbeitsverzeichnisses
+setwd("Z:/GIS")
+
+#installieren des Package "rgdal", falls dieses noch nicht vorhanden ist
+#BIVAND ET AL. 2021, https://CRAN.R-project.org/package=rgdal
+#install.package("rgdal")
+library(rgdal)
+
+
+#installieren des Package "raster", falls dieses noch nicht vorhanden ist
+#HIJMANS 2020, https://CRAN.R-project.org/package=raster
+#install.package("raster")
+library(raster)
+
+#Bevor die Analysen durchgeführt werden können, muss sichergestellt sein, dass die 
+#Funktionen des Packages "magAAR"
+#installiert sind. Für die Bearbeitung der Abschlussarbeit wurden diese manuell installiert. 
+#MENNENGA 2017b, https://github.com/ISAAKiel/magAAR
+
+#In dem nächsten Schritt werden alle Magnetogramme sowie die markierten Anomalien #felderweise durchgegangen. 
+#Es werden Dipole extrahiert und Anomalien nach größe kategorisiert 
+#Da sich die Schritte wiederholen wird der erste Datensatz exemplarisch für gesamte Analyse beschrieben
+
+
+#168_172
+#Die Mittelpunkte der extrahierten Anomalien wird als .shp Datein in die Arbeitsoberfläche #von R geladen und in eine 
+#Variable geschrieben
+ano_168_172 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/168-172_gr5_mark.shp")
+ano_168_172
+
+#Das Magnetogramm der dazugehörigen Fläche wird als .sdat Datei in die Arbeitsoberfläche #von R geladen und in eine
+#Variable geschrieben
+mag_168_172 <- raster("./raw/MAGNETIK/Fläche_168-172/sdat/Flaeche_168-172.sdat")
+
+#Darstellung des Magnetogramms und der markierten Anomalien als Überprüfung
+#Hierfür wird das Raster des Magnetogramms in eine neue Variable geschrieben
+mag_disp_168_172 <- mag_168_172
+
+#Das Raster wird auf min und max 5 nT beschränkt.
+mag_disp_168_172[mag_disp_168_172 > 5] <- 5
+mag_disp_168_172[mag_disp_168_172 < -5] <- -5
+#Darstellung des Magnetogramms und der markierten Anomalien
+plot(mag_disp_168_172)
+points(test, pch = 21, bg ="red", col="black")
+
+#In einem nächsten Schritt werden die Dipole markiert und rausgerechnet. Hierfür wird die #folgende Funktion verwendet, mit den entsprechenden Parametern, welche der Vignette #des Packages entnommen sind.
+#Das Ergebnis wird in eine neue Variable geschrieben.
+analyse_mag_168_172 <- analyseMagnetic(anomalies_sdf =  ano_168_172, magnetic_raster =  mag_168_172, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+#Unter der Verwendung der folgenden Parameter ist es möglich mit der gleichen Funktion #Anomalien zu gruppieren. Die Parameter die hier verwendet werden, sind ausführlich in der #Vignette des Package beschrieben.
+#Das Ergebnis wird in der Variable ergänzt.
+analyse_mag_168_172 <- analyseMagnetic(anomalies_sdf = analyse_mag_168_172, magnetic_raster = mag_168_172, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+#Die ergänzten Informationen der Extraktion und der Gruppierung werden in einer neuen #.shp Datei exportiert, mit der in bsp. QGIS weitergearbeitet werden kann.
+writeOGR(obj= analyse_mag_168_172, dsn = "derived", layer="analyse_mag_168_172", driver = "ESRI Shapefile")
+
+
+#173
+ano_173 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/173_gr5_mark.shp")
+ano_173
+
+mag_173 <- raster("./raw/MAGNETIK/Fläche_173/sdat/Flaeche_173.sdat")
+mag_disp_173 <- mag_173
+
+mag_disp_173[mag_disp_173 > 5] <- 5
+mag_disp_173[mag_disp_173 < -5] <- -5
+
+plot(mag_disp_173)
+points(ano_173, pch = 21, bg ="red", col="black")
+
+analyse_mag_173 <- analyseMagnetic(anomalies_sdf =  ano_173, magnetic_raster =  mag_173, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_173 <- analyseMagnetic(anomalies_sdf = analyse_mag_173, magnetic_raster = mag_173, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_173, dsn = "derived", layer="analyse_mag_173", driver = "ESRI Shapefile")
+
+
+
+#174
+ano_174 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/174_gr5_mark.shp")
+ano_174
+
+mag_174 <- raster("./raw/MAGNETIK/Fläche_174/sdat/Flaeche_174.sdat")
+mag_disp_174 <- mag_174
+
+mag_disp_174[mag_disp_174 > 5] <- 5
+mag_disp_174[mag_disp_174 < -5] <- -5
+
+plot(mag_disp_174)
+points(ano_174, pch = 21, bg ="red", col="black")
+
+analyse_mag_174 <- analyseMagnetic(anomalies_sdf =  ano_174, magnetic_raster =  mag_174, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_174 <- analyseMagnetic(anomalies_sdf = analyse_mag_174, magnetic_raster = mag_174, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_174, dsn = "derived", layer="analyse_mag_174", driver = "ESRI Shapefile")
+
+
+#175_176
+ano_175_176 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/175-176_gr5_mark.shp")
+ano_175_176
+
+mag_175_176 <- raster("./raw/MAGNETIK/Fläche_175-176/sdat/Flaeche_175_176.sdat")
+mag_disp_175_176 <- mag_175_176
+
+mag_disp_175_176[mag_disp_175_176 > 5] <- 5
+mag_disp_175_176[mag_disp_175_176 < -5] <- -5
+
+plot(mag_disp_175_176)
+points(ano_175_176, pch = 21, bg ="red", col="black")
+
+analyse_mag_175_176 <- analyseMagnetic(anomalies_sdf =  ano_175_176, magnetic_raster =  mag_175_176, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_175_176 <- analyseMagnetic(anomalies_sdf = analyse_mag_175_176, magnetic_raster = mag_175_176, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_175_176, dsn = "derived", layer="analyse_mag_175_176", driver = "ESRI Shapefile")
+
+#177_182
+ano_177_182 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/177-182_gr_umz.shp")
+ano_177_182
+
+mag_177_182 <- raster("./raw/MAGNETIK/Fläche_177-182/sdat/Flaeche_177-182.sdat")
+mag_disp_177_182 <- mag_177_182
+
+mag_disp_177_182[mag_disp_177_182 > 5] <- 5
+mag_disp_177_182[mag_disp_177_182 < -5] <- -5
+
+plot(mag_disp_177_182)
+points(ano_177_182, pch = 21, bg ="red", col="black")
+
+analyse_mag_177_182 <- analyseMagnetic(anomalies_sdf =  ano_177_182, magnetic_raster =  mag_177_182, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_177_182 <- analyseMagnetic(anomalies_sdf = analyse_mag_177_182, magnetic_raster = mag_177_182, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_177_182, dsn = "derived", layer="analyse_mag_177_182", driver = "ESRI Shapefile")
+
+
+#183
+ano_183 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/183_gr5_mark.shp")
+ano_183
+
+mag_183 <- raster("./raw/MAGNETIK/Fläche_183/sdat/Flaeche_183.sdat")
+mag_disp_183 <- mag_183
+
+mag_disp_183[mag_disp_183 > 5] <- 5
+mag_disp_183[mag_disp_183 < -5] <- -5
+
+plot(mag_disp_183)
+points(ano_183, pch = 21, bg ="red", col="black")
+
+analyse_mag_183 <- analyseMagnetic(anomalies_sdf =  ano_183, magnetic_raster =  mag_183, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_183 <- analyseMagnetic(anomalies_sdf = analyse_mag_183, magnetic_raster = mag_183, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_183, dsn = "derived", layer="analyse_mag_183", driver = "ESRI Shapefile")
+
+#184-187
+ano_184_187 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/184-187_gr5_mark.shp")
+ano_184_187
+
+mag_184_187 <- raster("./raw/MAGNETIK/Fläche_184-187/sdat/Flaeche_184_187.sdat")
+mag_disp_184_187 <- mag_184_187
+
+mag_disp_184_187[mag_disp_184_187 > 5] <- 5
+mag_disp_184_187[mag_disp_184_187 < -5] <- -5
+
+plot(mag_disp_184_187)
+points(ano_184_187, pch = 21, bg ="red", col="black")
+
+analyse_mag_184_187 <- analyseMagnetic(anomalies_sdf =  ano_184_187, magnetic_raster =  mag_184_187, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_184_187 <- analyseMagnetic(anomalies_sdf = analyse_mag_184_187, magnetic_raster = mag_184_187, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_184_187, dsn = "derived", layer="analyse_mag_184_187", driver = "ESRI Shapefile")
+
+
+#185
+ano_185 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/185_gr5_mark.shp")
+ano_185
+
+mag_185 <- raster("./raw/MAGNETIK/Fläche_185/sdat/Flaeche_185.sdat")
+mag_disp_185 <- mag_185
+
+mag_disp_185[mag_disp_185 > 5] <- 5
+mag_disp_185[mag_disp_185 < -5] <- -5
+
+plot(mag_disp_185)
+points(ano_185, pch = 21, bg ="red", col="black")
+
+analyse_mag_185 <- analyseMagnetic(anomalies_sdf =  ano_185, magnetic_raster =  mag_185, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_185 <- analyseMagnetic(anomalies_sdf = analyse_mag_185, magnetic_raster = mag_185, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_185, dsn = "derived", layer="analyse_mag_185", driver = "ESRI Shapefile")
+
+#188-191
+ano_188_191 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/188-191_gr5_mark.shp")
+ano_188_191
+
+mag_188_191 <- raster("./raw/MAGNETIK/Fläche_188-191/sdat/Flaeche_188-191.sdat")
+mag_disp_188_191 <- mag_189_191
+
+mag_disp_188_191[mag_disp_189_191 > 5] <- 5
+mag_disp_188_191[mag_disp_189_191 < -5] <- -5
+
+plot(mag_disp_188_191)
+points(ano_188_191, pch = 21, bg ="red", col="black")
+
+analyse_mag_188_191 <- analyseMagnetic(anomalies_sdf =  ano_188_191, magnetic_raster =  mag_188_191, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_188_191 <- analyseMagnetic(anomalies_sdf = analyse_mag_188_191, magnetic_raster = mag_188_191, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_188_191, dsn = "derived", layer="analyse_mag_188_191", driver = "ESRI Shapefile")
+
+
+#192
+ano_192 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/192_gr5_mark.shp")
+ano_192
+
+mag_192 <- raster("./raw/MAGNETIK/Fläche_192/sdat/Flaeche_192.sdat")
+mag_disp_192 <- mag_192
+
+mag_disp_192[mag_disp_192 > 5] <- 5
+mag_disp_192[mag_disp_192 < -5] <- -5
+
+plot(mag_disp_192)
+points(ano_192, pch = 21, bg ="red", col="black")
+
+analyse_mag_192 <- analyseMagnetic(anomalies_sdf =  ano_192, magnetic_raster =  mag_192, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_192 <- analyseMagnetic(anomalies_sdf = analyse_mag_192, magnetic_raster = mag_192, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_192, dsn = "derived", layer="analyse_mag_192", driver = "ESRI Shapefile")
+
+#193
+ano_193 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/193_gr5_mark.shp")
+ano_193
+
+mag_193 <- raster("./raw/MAGNETIK/Fläche_193/sdat/Flaeche_193.sdat")
+mag_disp_193 <- mag_193
+
+mag_disp_193[mag_disp_193 > 5] <- 5
+mag_disp_193[mag_disp_193 < -5] <- -5
+
+plot(mag_disp_193)
+points(ano_193, pch = 21, bg ="red", col="black")
+
+analyse_mag_193 <- analyseMagnetic(anomalies_sdf =  ano_193, magnetic_raster =  mag_193, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_193 <- analyseMagnetic(anomalies_sdf = analyse_mag_193, magnetic_raster = mag_193, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_193, dsn = "derived", layer="analyse_mag_193", driver = "ESRI Shapefile")
+
+
+#194
+ano_194 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/194_gr5_mark.shp")
+ano_194
+
+mag_194 <- raster("./raw/MAGNETIK/Fläche_194/sdat/Flaeche_194.sdat")
+mag_disp_194 <- mag_194
+
+mag_disp_194[mag_disp_194 > 5] <- 5
+mag_disp_194[mag_disp_194 < -5] <- -5
+
+plot(mag_disp_194)
+points(ano_194, pch = 21, bg ="red", col="black")
+
+analyse_mag_194 <- analyseMagnetic(anomalies_sdf =  ano_194, magnetic_raster =  mag_194, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_194 <- analyseMagnetic(anomalies_sdf = analyse_mag_194, magnetic_raster = mag_194, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_194, dsn = "derived", layer="analyse_mag_194", driver = "ESRI Shapefile")
+
+#195
+ano_195 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/195_gr5_mark.shp")
+ano_195
+
+mag_195 <- raster("./raw/MAGNETIK/Fläche_195/sdat/Flaeche_195.sdat")
+mag_disp_195 <- mag_195
+
+mag_disp_195[mag_disp_195 > 5] <- 5
+mag_disp_195[mag_disp_195 < -5] <- -5
+
+plot(mag_disp_195)
+points(ano_195, pch = 21, bg ="red", col="black")
+
+analyse_mag_195 <- analyseMagnetic(anomalies_sdf =  ano_195, magnetic_raster =  mag_195, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_195 <- analyseMagnetic(anomalies_sdf = analyse_mag_195, magnetic_raster = mag_195, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_195, dsn = "derived", layer="analyse_mag_195", driver = "ESRI Shapefile")
+
+
+#196
+ano_196 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/196_gr5_mark.shp")
+ano_196
+
+mag_196 <- raster("./raw/MAGNETIK/Fläche_196/sdat/Flaeche_196.sdat")
+mag_disp_196 <- mag_196
+
+mag_disp_196[mag_disp_196 > 5] <- 5
+mag_disp_196[mag_disp_196 < -5] <- -5
+
+plot(mag_disp_196)
+points(ano_196, pch = 21, bg ="red", col="black")
+
+analyse_mag_196 <- analyseMagnetic(anomalies_sdf =  ano_196, magnetic_raster =  mag_196, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_196 <- analyseMagnetic(anomalies_sdf = analyse_mag_196, magnetic_raster = mag_196, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_196, dsn = "derived", layer="analyse_mag_196", driver = "ESRI Shapefile")
+
+#197
+ano_197 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/197_gr5_mark.shp")
+ano_197
+
+mag_197 <- raster("./raw/MAGNETIK/Fläche_197/sdat/Flaeche_197.sdat")
+mag_disp_197 <- mag_197
+
+mag_disp_197[mag_disp_197 > 5] <- 5
+mag_disp_197[mag_disp_197 < -5] <- -5
+
+plot(mag_disp_197)
+points(ano_197, pch = 21, bg ="red", col="black")
+
+analyse_mag_197 <- analyseMagnetic(anomalies_sdf =  ano_197, magnetic_raster =  mag_197, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_197 <- analyseMagnetic(anomalies_sdf = analyse_mag_197, magnetic_raster = mag_197, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_197, dsn = "derived", layer="analyse_mag_197", driver = "ESRI Shapefile")
+
+
+#198
+ano_198 <- readOGR("./derived/MAGNETIK/MAG_ANA/GR5NT/MARKANO/198_gr5_mark.shp")
+ano_198
+
+mag_198 <- raster("./raw/MAGNETIK/Fläche_198/sdat/Flaeche_198.sdat")
+mag_disp_198 <- mag_198
+
+mag_disp_198[mag_disp_198 > 5] <- 5
+mag_disp_198[mag_disp_198 < -5] <- -5
+
+plot(mag_disp_198)
+points(ano_198, pch = 21, bg ="red", col="black")
+
+analyse_mag_198 <- analyseMagnetic(anomalies_sdf =  ano_198, magnetic_raster =  mag_198, get_dipol = TRUE, angle_steps = 10, searchradius = 2.5, dipolfactor = 2, dipol_minima = -8)
+
+analyse_mag_198 <- analyseMagnetic(anomalies_sdf = analyse_mag_198, magnetic_raster = mag_198, searchradius = 2, angle_steps = 10, get_profile_values = TRUE, method = "avg",cut_value = 10)
+
+writeOGR(obj= analyse_mag_198, dsn = "derived", layer="analyse_mag_198", driver = "ESRI Shapefile")
